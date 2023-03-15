@@ -54,6 +54,7 @@ BLEDescriptor bmeHumidityDescriptor(BLEUUID((uint16_t)0x2903));
 
 class BLEServerCB : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) override {
+    deviceConnected = true;
     pServer->startAdvertising();
     //BLEDevice::startAdvertising();
   };
@@ -147,17 +148,17 @@ void setup(void)
     //pServer->getAdvertising()->start();
     //Serial.println("Waiting a client connection to notify...");
 
-	// Start advertising
-	BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-	pAdvertising->addServiceUUID(SERVICE_UUID);
-	//pAdvertising->setScanResponse(false);
-	//pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
-	// // functions that help with iPhone connections issue
-	//pAdvertising->setScanResponse(true);
-	//pAdvertising->setMinPreferred(0x06);  
-	//pAdvertising->setMinPreferred(0x12);
-	BLEDevice::startAdvertising();
-	Serial.println("Waiting a client connection to notify...");
+    // Start advertising
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    //pAdvertising->setScanResponse(false);
+    //pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+    // // functions that help with iPhone connections issue
+    //pAdvertising->setScanResponse(true);
+    //pAdvertising->setMinPreferred(0x06);  
+    //pAdvertising->setMinPreferred(0x12);
+    BLEDevice::startAdvertising();
+    Serial.println("Waiting a client connection to notify...");
 
 }
 
@@ -181,12 +182,12 @@ void loop()
         pTxCharacteristic->setValue(&txValue, 1);
         pTxCharacteristic->notify();
         txValue++;
-        delay(3);
+        delay(500); // bluetooth stack will go into congestion, if too many packets are sent
     }
     if (!deviceConnected && oldDeviceConnected) {
         delay(500);
         pServer->startAdvertising();
-        pServer->disconnectClient();
+        ////pServer->disconnectClient();
         Serial.println("start advertising");
         oldDeviceConnected = deviceConnected;
     }
@@ -195,12 +196,14 @@ void loop()
         oldDeviceConnected = deviceConnected;
     }
 
-	//10ms 한번씩 체크
+	//100ms 한번씩 체크
 	if(millis() - lastTime > 100) {
 		lastTime = millis();
 		ConnectTime++;
 		Serial.print("tm: ");
 		Serial.println(ConnectTime);
+//        pTxCharacteristic->setValue(&txValue, 1);
+//        pTxCharacteristic->notify();
 	}
     //delay(20); // 1 second
 }
