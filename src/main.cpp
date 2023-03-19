@@ -1,9 +1,8 @@
-/*******************************************************************************
- ******************************************************************************/
+#include <Arduino.h>
 #include <Wire.h> //Include arduino Wire Library to enable to I2C
-
 #include <tb-h70.h>
-//#include <ble-server.h>
+#include <zoomer.h>
+#include <haptic.h>
 
 #include <Arduino_GFX_Library.h>
 
@@ -53,11 +52,11 @@ BLEDescriptor bmeHumidityDescriptor(BLEUUID((uint16_t)0x2903));
 
 
 class BLEServerCB : public BLEServerCallbacks {
-  void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) override {
-    deviceConnected = true;
-    pServer->startAdvertising();
-    //BLEDevice::startAdvertising();
-  };
+    void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) override {
+        deviceConnected = true;
+        pServer->startAdvertising();
+        //BLEDevice::startAdvertising();
+    };
 
 } bleServerCB;
 
@@ -65,10 +64,16 @@ class BLEServerCB : public BLEServerCallbacks {
 // 연결되었거나 연결이 끊어졌거나
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
-      Serial.println("MyServerCallbacks: deviceConnected");
-      BLEDevice::startAdvertising();
+        deviceConnected = true;
+//        Serial.println("MyServerCallbacks: deviceConnected");
+        pServer->startAdvertising();
+        BLEDevice::startAdvertising();
+    }
+    void onDisconnect(BLEServer* pServer) {
+        deviceConnected = false;
     }
 };
+
 class MyServerCallbacks1: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       Serial.println("MyServerCallbacks: deviceConnected");
@@ -82,22 +87,49 @@ class MyServerCallbacks1: public BLEServerCallbacks {
 
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string rxValue = pCharacteristic->getValue();
+        std::string rxValue = pCharacteristic->getValue();
 
-      if (rxValue.length() > 0) {
-		ConnectTime = 0;
-        //Serial.println("*********");
-        Serial.print("Received Value: ");
-        for (int i = 0; i < rxValue.length(); i++)
-          Serial.print(rxValue[i]);
+        if (rxValue.length() > 0) {
+            ConnectTime = 0;
+            Serial.print("Received Value: ");
+            for (int i = 0; i < rxValue.length(); i++)
+                Serial.print(rxValue[i]);
+            Serial.println();
 
-        Serial.println();
-        //Serial.println("*********");
-      }
+            // Do stuff based on the command received from the app
+            if (rxValue.find("Button1Click") != -1) { 
+                Serial.println("Button1Click");
+                haptic_shake(3, 50);
+                stepper.moveTo(5000);
+                //digitalWrite(4, HIGH);
+            }
+            else if (rxValue.find("Button2Click") != -1) {
+                Serial.println("Button2Click");
+                haptic_shake(5, 150);
+                stepper.moveTo(1000);
+                //digitalWrite(4, LOW);
+            }
+
+        }
     }
 };
 
-
+void checkToReconnect() //added
+{
+    // disconnected so advertise
+    if (!deviceConnected && oldDeviceConnected) {
+        delay(500); // give the bluetooth stack the chance to get things ready
+        pServer->startAdvertising(); // restart advertising
+        Serial.println("Disconnected: start advertising");
+        oldDeviceConnected = deviceConnected;
+    }
+    // connected so reset boolean control
+    if (deviceConnected && !oldDeviceConnected) {
+        // do stuff here on connecting
+        Serial.println("Reconnected");
+        oldDeviceConnected = deviceConnected;
+    }
+}
 
 void setup(void)
 {
@@ -117,9 +149,11 @@ void setup(void)
     gfx->setTextColor(RED);
     gfx->println("Hello World!");
 
-    delay(1000); // 5 seconds
+    //delay(1000); // 5 seconds
     tb_i2c_h70_Init();
     //bleInit();
+    haptic_Init();
+    zoomerInit();
 
     // Create the BLE Device
     BLEDevice::init("UART Service");
@@ -159,6 +193,7 @@ void setup(void)
     //pAdvertising->setMinPreferred(0x12);
     BLEDevice::startAdvertising();
     Serial.println("Waiting a client connection to notify...");
+    
 
 }
 
@@ -171,41 +206,41 @@ void audioInit()
     xTaskCreatePinnedToCore( audioTask, "audioplay", 5000, NULL, 2 | portPRIVILEGE_BIT, NULL, 0);
 }
 
+
 void loop()
 {
+    checkToReconnect();
 //    gfx->setCursor(random(gfx->width()), random(gfx->height()));
 //    gfx->setTextColor(random(0xffff), random(0xffff));
 //    gfx->setTextSize(random(6) /* x scale */, random(6) /* y scale */, random(2) /* pixel_margin */);
 //    gfx->println("Hello World!");
     if (deviceConnected) {
-        Serial.println("deviceConnected");
-        pTxCharacteristic->setValue(&txValue, 1);
+        String newValue = String((float(get_tbh70())*0.02)-273.15);
+        //str = String((float(get_tbh70())*0.02)-273.15);
+        Serial.println(newValue);
+            gfx->fillRect(80, 100, 80, 30, BLACK);
+            gfx->setCursor(80, 100);
+            gfx->setTextColor(WHITE);
+            gfx->setTextSize(2/* x scale */, 2 /* y scale */, 0 /* pixel_margin */);
+            gfx->println(newValue);
+        //pTxCharacteristic->setValue(&txValue, 1);
+        pTxCharacteristic->setValue(newValue.c_str());
         pTxCharacteristic->notify();
         txValue++;
-        delay(500); // bluetooth stack will go into congestion, if too many packets are sent
-    }
-    if (!deviceConnected && oldDeviceConnected) {
-        delay(500);
-        pServer->startAdvertising();
-        ////pServer->disconnectClient();
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
-    }
-    if (deviceConnected && !oldDeviceConnected) {
-        Serial.println("start advertising11");
-        oldDeviceConnected = deviceConnected;
+        //haptic_shake(2, 20);
+        delay(100); // bluetooth stack will go into congestion, if too many packets are sent
     }
 
 	//100ms 한번씩 체크
 	if(millis() - lastTime > 100) {
 		lastTime = millis();
 		ConnectTime++;
-		Serial.print("tm: ");
-		Serial.println(ConnectTime);
+//		Serial.print("tm: ");
+//		Serial.println(ConnectTime);
 //        pTxCharacteristic->setValue(&txValue, 1);
 //        pTxCharacteristic->notify();
 	}
-    //delay(20); // 1 second
+    delay(20); // 1 second
 }
 
 
