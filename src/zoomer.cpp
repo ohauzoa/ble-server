@@ -9,6 +9,7 @@ boolean moveClockwise = true;
 
 void zoomerTask(void *pvParameters)
 {
+    unsigned long lastTime = 0;
     stepper.setMaxSpeed(300.0);
     Serial.println();
     Serial.print(stepper.currentPosition()); // get the RPM of the stepper
@@ -32,6 +33,11 @@ void zoomerTask(void *pvParameters)
         digitalWrite(17, LOW);
         digitalWrite(18, LOW);
         delay(100);
+	    if(millis() - lastTime > 1000) {
+		    lastTime = millis();
+            Serial.print(stepper.currentPosition()); // get the RPM of the stepper
+            Serial.println();
+    	}
 
     }
 
