@@ -38,7 +38,7 @@ float CalcTemp(int rawTemp)                    // 온도계산
   float retTemp;
   retTemp = float(rawTemp)*0.02;
   retTemp -= 273.15;
-  return retTemp; 
+  return retTemp;
 }
 
 uint8_t CalPEC(uint8_t *crc, uint8_t nBytes)  // PEC 연산
@@ -110,6 +110,15 @@ uint8_t GetSensor(void)                    // 센서온도 읽기
     return 0;
 }
 
+int16_t get_tbh70(void)
+{
+    if(GetObject())
+    {
+        return _rawObject;
+    }
+    return 0;
+}
+
 #include <Arduino_GFX_Library.h>
 extern Arduino_GFX *gfx;
 
@@ -127,13 +136,8 @@ void tb_i2c_h70_Task(void *pvParameters)
             //Serial.print(CalcTemp(_rawObject));   // 대상온도 출력
             //Serial.print("    Sensor Temp : ");
             //Serial.println(CalcTemp(_rawSensor));     // 센서온도 출력
-            gfx->fillRect(80, 100, 80, 30, BLACK);
-            gfx->setCursor(80, 100);
-            gfx->setTextColor(WHITE);
-            gfx->setTextSize(2/* x scale */, 2 /* y scale */, 0 /* pixel_margin */);
-            gfx->println(CalcTemp(_rawObject), 2);
      
-            delay(100);                              // Delay 최소 100ms 이상
+            delay(1000);                              // Delay 최소 100ms 이상
         }
         else
         {
@@ -147,5 +151,7 @@ void tb_i2c_h70_Task(void *pvParameters)
 
 void tb_i2c_h70_Init()
 {
-    xTaskCreatePinnedToCore( tb_i2c_h70_Task, "IRsensor", 5000, NULL, 15 | portPRIVILEGE_BIT, NULL, 0);
+    Wire.begin(I2C_SDA, I2C_SCL);
+    delay(500);                                // Waiting for sensor initialization.(min : 200ms)
+//    xTaskCreatePinnedToCore( tb_i2c_h70_Task, "IRsensor", 5000, NULL, 15 | portPRIVILEGE_BIT, NULL, 0);
 }
