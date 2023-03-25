@@ -1,0 +1,15 @@
+menu_no = MENU_MODE
+control_mode = MODE_REMOTE
+op_mode = MODE_1064
+volt = 500
+freq = 1
+qs = 190
+q1 = 140
+q2 = 90
+qm1 = 100
+qm2 = 25
+aim = 8
+hp_mode = HP_AUTO
+power_shot_cnt = 10
+lamp_shot_cnt = 45
+total_shot_cnt = 324
