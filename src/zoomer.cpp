@@ -35,10 +35,7 @@ void zoomerTask(void *pvParameters)
         delay(100);
 	    if(millis() - lastTime > 1000) {
 		    lastTime = millis();
-<<<<<<< HEAD
             Serial.print("stepper position : "); // get the RPM of the stepper
-=======
->>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
             Serial.print(stepper.currentPosition()); // get the RPM of the stepper
             Serial.println();
     	}

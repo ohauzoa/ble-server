@@ -1,3 +1,4 @@
+[misc]
 menu_no = MENU_MODE
 control_mode = MODE_REMOTE
 op_mode = MODE_1064

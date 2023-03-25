@@ -151,11 +151,8 @@ void tb_i2c_h70_Task(void *pvParameters)
 
 void tb_i2c_h70_Init()
 {
-<<<<<<< HEAD
     Wire.begin(I2C_SDA, I2C_SCL);
     delay(500);                                // Waiting for sensor initialization.(min : 200ms)
 //    xTaskCreatePinnedToCore( tb_i2c_h70_Task, "IRsensor", 5000, NULL, 15 | portPRIVILEGE_BIT, NULL, 0);
-=======
     xTaskCreatePinnedToCore( tb_i2c_h70_Task, "IRsensor", 4096, NULL, 37 | portPRIVILEGE_BIT, NULL, 0);
->>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 }
