@@ -1,10 +1,14 @@
 #include <Arduino.h>
 #include <Wire.h> //Include arduino Wire Library to enable to I2C
-
 #include <tb-h70.h>
+<<<<<<< HEAD
 #include <screen.h>
 #include <haptic.h>
 #include <zoomer.h>
+=======
+#include <zoomer.h>
+#include <haptic.h>
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 
 
 
@@ -78,6 +82,7 @@ class MyServerCallbacks1: public BLEServerCallbacks {
 
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
+<<<<<<< HEAD
         String s = (char*)pCharacteristic->getData();
         Serial.println("rx:" + s);  // 이게 데이터!
 
@@ -111,6 +116,17 @@ Serial.println("rx:" + s);  // 이게 데이터!
             Serial.println();
 
 
+=======
+        std::string rxValue = pCharacteristic->getValue();
+
+        if (rxValue.length() > 0) {
+            ConnectTime = 0;
+            Serial.print("Received Value: ");
+            for (int i = 0; i < rxValue.length(); i++)
+                Serial.print(rxValue[i]);
+            Serial.println();
+
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
             // Do stuff based on the command received from the app
             if (rxValue.find("Button1Click") != -1) { 
                 Serial.println("Button1Click");
@@ -129,7 +145,10 @@ Serial.println("rx:" + s);  // 이게 데이터!
     }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 void checkToReconnect() //added
 {
     // disconnected so advertise
@@ -152,12 +171,31 @@ void setup(void)
     Serial.begin(115200);                       // Initialize Serial to log output
     while (!Serial) ;
 
+<<<<<<< HEAD
+=======
+
+    gfx->begin();
+    gfx->fillScreen(BLACK);
+
+#ifdef TFT_BL
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
+#endif
+
+    gfx->setCursor(10, 10);
+    gfx->setTextColor(RED);
+    gfx->println("Hello World!");
+
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
     //delay(1000); // 5 seconds
     tb_i2c_h70_Init();
     //bleInit();
     haptic_Init();
     zoomerInit();
+<<<<<<< HEAD
     screen_Init();
+=======
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 
     // Create the BLE Device
     BLEDevice::init("UART Service");
@@ -214,12 +252,36 @@ void audioInit()
 void loop()
 {
     checkToReconnect();
+<<<<<<< HEAD
 
+=======
+//    gfx->setCursor(random(gfx->width()), random(gfx->height()));
+//    gfx->setTextColor(random(0xffff), random(0xffff));
+//    gfx->setTextSize(random(6) /* x scale */, random(6) /* y scale */, random(2) /* pixel_margin */);
+//    gfx->println("Hello World!");
+    if (deviceConnected) {
+        String newValue = String((float(get_tbh70())*0.02)-273.15);
+        //str = String((float(get_tbh70())*0.02)-273.15);
+        Serial.println(newValue);
+            gfx->fillRect(80, 100, 80, 30, BLACK);
+            gfx->setCursor(80, 100);
+            gfx->setTextColor(WHITE);
+            gfx->setTextSize(2/* x scale */, 2 /* y scale */, 0 /* pixel_margin */);
+            gfx->println(newValue);
+        //pTxCharacteristic->setValue(&txValue, 1);
+        pTxCharacteristic->setValue(newValue.c_str());
+        pTxCharacteristic->notify();
+        txValue++;
+        //haptic_shake(2, 20);
+        delay(100); // bluetooth stack will go into congestion, if too many packets are sent
+    }
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 
 	//100ms 한번씩 체크
 	if(millis() - lastTime > 100) {
 		lastTime = millis();
 		ConnectTime++;
+<<<<<<< HEAD
 
         if (deviceConnected) {
             String newValue = "T:" + String((float(get_tbh70())*0.02)-273.15);
@@ -234,6 +296,14 @@ void loop()
 
 	}
     delay(10); // 1 second
+=======
+//		Serial.print("tm: ");
+//		Serial.println(ConnectTime);
+//        pTxCharacteristic->setValue(&txValue, 1);
+//        pTxCharacteristic->notify();
+	}
+    delay(20); // 1 second
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 }
 
 

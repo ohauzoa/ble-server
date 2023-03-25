@@ -53,5 +53,9 @@ void haptic_Task(void *pvParameters)
 
 void haptic_Init()
 {
+<<<<<<< HEAD
     xTaskCreatePinnedToCore( haptic_Task, "Haptic", 5000, NULL, 18 | portPRIVILEGE_BIT, NULL, 1);
+=======
+    xTaskCreatePinnedToCore( haptic_Task, "Haptic", 4096, NULL, 38 | portPRIVILEGE_BIT, NULL, 1);
+>>>>>>> 71084f1dda2bbe579ddc18f0c21fdb4b70979ae7
 }
